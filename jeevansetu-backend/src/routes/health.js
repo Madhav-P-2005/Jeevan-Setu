@@ -1,22 +1,15 @@
-// # jeevansetu-backend/src/routes/health.js
+// jeevansetu-backend/src/routes/health.js
 
 
 import express from "express";
-import dotenv from "dotenv"
-import cors from "cors"
-import helmet from "helmet"
-import morgan from "morgan"
-import connectDB from "./config/db.js"
-import healthRoute from "./routes/health.js";
 
+const router = express.Router();
 
-// Load env variables 
-dotenv.config();
+router.get("/", (req, res) => {
+  res.status(200).json({
+    status: "OK",
+    message: "Backend Running Successfully",
+  });
+});
 
-
-// Connect DB 
-connectDB();
-
-
-// Initialize app 
-const app = express();
+export default router;
