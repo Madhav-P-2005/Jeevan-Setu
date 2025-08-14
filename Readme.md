@@ -81,3 +81,8 @@ morgan - HTTP request logger
 
 
 npm install -D nodemon :- Why nodemon? It automatically restarts your server when you make changes - huge time saver during development!
+
+
+
+
+npm install bcryptjs jsonwebtoken express-validator
