@@ -86,3 +86,6 @@ npm install -D nodemon :- Why nodemon? It automatically restarts your server whe
 
 
 npm install bcryptjs jsonwebtoken express-validator
+
+Install cookie parser: run in backend folder:
+npm i cookie-parser
