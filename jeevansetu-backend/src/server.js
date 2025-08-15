@@ -7,7 +7,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import connectDB from "./config/db.js";
 import healthRoute from "./routes/health.js";
-
+import cookieParser from "cookie-parser";
 
 // Load env variables
 dotenv.config();
@@ -23,8 +23,9 @@ const app = express();
 
 // Middleware 
 app.use(helmet());
-app.use(cors());
+app.use(cors({origin :  "http://localhost:5173" ,  credentials : true}));
 app.use(express.json());
+app.use(cookieParser());
 app.use(morgan("dev"));
 
 
