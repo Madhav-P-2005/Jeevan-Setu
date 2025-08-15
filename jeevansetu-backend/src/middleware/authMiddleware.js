@@ -1,0 +1,1 @@
+// jeevansetu-backend/src/middleware/authMiddleware.js
