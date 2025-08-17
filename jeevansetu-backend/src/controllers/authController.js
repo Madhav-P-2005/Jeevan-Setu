@@ -4,6 +4,8 @@ import User from "../models/User.js";
 
 import generateTokens from "../utils/generateTokens.js";
 
+import jwt from "jsonwebtoken";
+
 
 // Register New User Controller 
 export const registerUser = async (req , res) => {
@@ -151,7 +153,6 @@ export const loginUser = async (req, res) =>{
 
       // 6) Return safe user + accessToken 
       return res.status(200).json({
-
         success : true,
         data : {
             user:{
@@ -178,3 +179,138 @@ export const loginUser = async (req, res) =>{
 
 
 // module.exports = registerUser; // You’re using ESM export already so need of this.
+
+
+
+// Refresh Token Controller 
+export const refreshAccessTokenController = async (req , res) =>{
+
+    try{
+
+        const token = req.cookies?.refreshToken;
+
+        if(!token){
+            return res.status(401).json({
+                success : false,
+                message : "Token is missing"
+            })
+
+        }
+
+
+        const payload = jwt.verify(token , process.env.JWT_REFRESH_SECRET)
+        
+        const {accessToken , refreshToken} = generateTokens(payload.id);
+
+        // Set rotated Refresh cookie (same options you used in register/login)
+
+        const isProd = process.env.NODE_ENV === "production";
+
+        res.cookie("refreshToken" , refreshToken , {
+
+            httpOnly : true,
+            secure : isProd,
+            sameSite : isProd ? "none" : "lax",
+            maxAge : 7 * 24 * 60 * 60 * 1000,
+
+            // path : "/api/auth",
+        })
+
+
+
+        
+
+        // Return new access token only 
+        return res.status(200).json({
+            success : true,
+            data : {
+                accessToken
+            }
+        })
+    
+
+    }catch(error){
+
+        return res.status(401).json({
+            success : false,
+            message : "Invalid or expired refresh token",
+        })
+    }
+}
+
+
+
+
+// Logout Controller 
+export const LogoutUserController = async (req , res) => {
+
+    try {
+    
+        const isProd = process.env.NODE_ENV === "production";
+
+        res.clearCookie('refreshToken' , {
+            httpOnly : true,
+            secure : isProd,
+            sameSite : isProd ? "none" : "lax",
+            maxAge : 7 * 24 * 60 * 60 * 1000,
+        })
+
+
+        return res.status(200).json({
+            success : true,
+            message : "User Logged Out Successfully"
+        })
+
+
+    }
+    catch(error){
+
+        return res.status(500).json({
+            success : false,
+            message : "Unable to logout user"
+        })
+    }
+}
+
+
+
+
+// Dashboard Controller 
+export const getProfileController = async (req ,res) =>{
+
+    try{
+        
+         const user = await User.findById(req.userId).select("name email role bloodGroup location createdAt updatedAt donationHistory");
+
+         if(!user){
+            return res.status(404).json({
+                success : false,
+                message : "User not found",
+            })
+         }
+      
+        return res.status(200).json({
+            success : true,
+            data : {
+                user : {
+                    id : user._id,
+                    name : user.name,
+                    email : user.email,
+                    role : user.role,
+                    bloodGroup : user.bloodGroup,
+                    location : user.location,
+                    createdAt : user.createdAt,
+                    updatedAt : user.updatedAt,
+                    donationHistory : user.donationHistory,
+                },
+            },
+        });
+    }
+    catch(error){
+          return res.status(500).json({
+            success : false,
+            message : "Internal Server Error",
+            error : error.message
+          })
+    }
+}

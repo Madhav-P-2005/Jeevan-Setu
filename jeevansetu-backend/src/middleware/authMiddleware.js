@@ -16,7 +16,6 @@ export const protect = (req, res, next) => {
     }
 
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    res.user = payload;
     req.userId = payload.id;
     req.user = { id: payload.id };
     return next();

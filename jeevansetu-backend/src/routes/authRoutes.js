@@ -2,7 +2,7 @@
 
 import express from "express";
 
-import { registerUser, loginUser } from "../controllers/authController.js";
+import { registerUser, loginUser , refreshAccessTokenController , LogoutUserController , getProfileController} from "../controllers/authController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -21,5 +21,7 @@ router.get('/protected', protect , (req ,res) =>{
         userId  : req.userId
     })
 })
-
+router.get('/profile', protect , getProfileController)
+router.post('/refresh-token' , refreshAccessTokenController)
+router.post('/logout' , LogoutUserController)
 export default router;
