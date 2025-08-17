@@ -5,6 +5,7 @@ import User from "../models/User.js";
 import generateTokens from "../utils/generateTokens.js";
 
 
+// Register New User Controller 
 export const registerUser = async (req , res) => {
 
     try { 
@@ -100,45 +101,78 @@ export const registerUser = async (req , res) => {
 };
 
 
-
+// Login User Controller 
 export const loginUser = async (req, res) =>{
 
     try {
+      const { email, password } = req.body;
 
-        const {email , password} = req.body;
+      // 1) Basic Validation
+      if (!email || !password) {
+        return res.status(400).json({
+          success: false,
+          message: "Please provide email and password",
+        });
+      }
+
+      // 2) Find user by email
+
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid credentials",
+        });
+      }
+
+      // 3) Compare password
+      const isMatch = await user.comparePassword(password);
+      if (!isMatch) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid credentials",
+        });
+      }
+
+      // 4) Generate tokens
+      const { accessToken, refreshToken } = generateTokens(user._id);
 
 
-        // 1) Basic Validation
-        if(!email || !password){
-            return res.status(400).json({
-                success : false,
-                message : "Please provide email and password"
-            })
+      // 5) Set httpOnly refresh token cookie
+      const isProd = process.env.NODE_ENV === "production";
+      res.cookie("refreshToken" ,refreshToken,{
+        httpOnly : true,
+        secure : isProd,
+        sameSite : isProd ? "none" : "lax",
+        maxAge : 7 * 24 * 60 * 60 * 1000,
+        // path: "/api/auth",
+      });
+
+
+      // 6) Return safe user + accessToken 
+      return res.status(200).json({
+
+        success : true,
+        data : {
+            user:{
+                id: user._id,
+                name : user.name,
+                email : user.email,
+                role : user.role,
+                createdAt : user.createdAt,
+                updatedAt : user.updatedAt,
+            },
+            accessToken,
         }
-
-        
-        // 2) Find user by email
-
-        const user = await User.findOne({email});
-        if(!user){
-            return res.status(401).json({
-                success : false ,
-                message : "Invalid credentials"
-            })
-        }
-
-
-        // 3) Generate tokens 
-        const {accessToken , refreshToken} = generateTokens(user._id);
-
-        
-
-
-
-
+      });
     }
     catch(error){
-
+          
+        return res.status(500).json({
+            success : false,
+            message : "Internal Server Error",
+            error : error.message
+        })
     }
 }
 
