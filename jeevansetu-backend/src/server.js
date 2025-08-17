@@ -8,6 +8,7 @@ import morgan from "morgan";
 import connectDB from "./config/db.js";
 import healthRoute from "./routes/health.js";
 import cookieParser from "cookie-parser";
+import authRoutes from "./routes/authRoutes.js";
 
 // Load env variables
 dotenv.config();
@@ -31,6 +32,8 @@ app.use(morgan("dev"));
 
 // Routes 
 app.use("/api/health", healthRoute);
+
+app.use("/api/auth" , authRoutes);
 
 
 // Server listen

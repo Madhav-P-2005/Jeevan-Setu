@@ -2,8 +2,6 @@
 
 import User from "../models/User.js";
 
-import bcrypt from "bcryptjs";
-
 import generateTokens from "../utils/generateTokens.js";
 
 
@@ -28,6 +26,15 @@ export const registerUser = async (req , res) => {
             })
         }
 
+        // 1b) bloodGroup validation (enum)
+        const allowedGroups = ["A+","A-","B+","B-","AB+","AB-","O+","O-"];
+        if(!bloodGroup || !allowedGroups.includes(bloodGroup)){
+            return res.status(400).json({
+                success: false,
+                message: "Valid bloodGroup is required (A+, A-, B+, B-, AB+, AB-, O+, O-)"
+            });
+        }
+
 
 
         // 2) Check duplicate 
@@ -39,27 +46,22 @@ export const registerUser = async (req , res) => {
         }
        
 
-
-        // 3) Hash Password 
-        const hashedPassword = await bcrypt.hash(password , 10);
-
-
-        // 4) Create User 
+        // 3) Create User (model pre-save will hash password)
         const user = await User.create({
             name,
             email,
-            password : hashedPassword,
+            password,
             role,
             bloodGroup,
             location,
         })
 
 
-        // 5) Generate tokens 
+        // 4) Generate tokens 
         const {accessToken , refreshToken} = generateTokens(user._id);
 
 
-        // 6) Set httpOnly refresh token cookie
+        // 5) Set httpOnly refresh token cookie
         const isProd = process.env.NODE_ENV === "production";
         res.cookie("refreshToken" , refreshToken, {
             httpOnly : true,
@@ -71,7 +73,7 @@ export const registerUser = async (req , res) => {
         });
 
 
-        // 7) Return safe  user + accessToken 
+        // 6) Return safe  user + accessToken 
         return  res.status(201).json({
             success : true,
             data : {
@@ -98,4 +100,47 @@ export const registerUser = async (req , res) => {
 };
 
 
-// module.exports = registerUser; // You’re using ESM export already so need of this. 
+
+export const loginUser = async (req, res) =>{
+
+    try {
+
+        const {email , password} = req.body;
+
+
+        // 1) Basic Validation
+        if(!email || !password){
+            return res.status(400).json({
+                success : false,
+                message : "Please provide email and password"
+            })
+        }
+
+        
+        // 2) Find user by email
+
+        const user = await User.findOne({email});
+        if(!user){
+            return res.status(401).json({
+                success : false ,
+                message : "Invalid credentials"
+            })
+        }
+
+
+        // 3) Generate tokens 
+        const {accessToken , refreshToken} = generateTokens(user._id);
+
+        
+
+
+
+
+    }
+    catch(error){
+
+    }
+}
+
+
+// module.exports = registerUser; // You’re using ESM export already so need of this.

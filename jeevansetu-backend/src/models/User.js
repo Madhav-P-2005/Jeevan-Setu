@@ -1,10 +1,9 @@
 // jeevansetu-backend/src/models/User.js
 
 
-const mongoose = require("mongoose");
+import mongoose  from "mongoose";
 
-const bcrypt = require("bcryptjs");
-
+import bcrypt  from "bcryptjs";
 
 // Define the Schema
 const UserSchema = new mongoose.Schema(
@@ -99,4 +98,4 @@ UserSchema.methods.comparePassword = async function
 // Create and export the model
 const User = mongoose.model("User", UserSchema);
 
-module.exports = User;
+export default User;
