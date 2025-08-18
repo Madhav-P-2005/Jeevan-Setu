@@ -89,3 +89,62 @@ npm install bcryptjs jsonwebtoken express-validator
 
 Install cookie parser: run in backend folder:
 npm i cookie-parser
+
+
+
+npm create vite@latest jeevansetu-frontend -- --template react
+
+cd jeevansetu-frontend
+
+npm install
+
+
+Old setup  of Tailwind CSS :- 
+
+Option B: Tailwind v3 (classic config)
+Only do this if you prefer the old setup.
+
+Install:
+npm i -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+Add to tailwind.config.js:
+content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"]
+Replace @import "tailwindcss"; with:
+In 
+src/index.css
+:
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+Run: npm run dev
+
+
+
+New Setup of Tailwind CSS :- (Adopted here) :- 
+
+npm i -D tailwindcss@latest postcss@latest autoprefixer@latest
+npx tailwindcss@latest init -p
+
+Add to tailwind.config.js:
+content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"]
+
+or :- 
+
+just :- npm i -D tailwindcss @tailwindcss/vite
+
+Add to vite.config.js:
+import tailwindcss from "@tailwindcss/vite";
+export default {
+  plugins: [tailwindcss()],
+}
+
+Core libraries for React.js Frontend Setup (install now) :- 
+
+react-router-dom — routing
+axios — HTTP client (we’ll set withCredentials)
+react-hook-form — forms
+zod + @hookform/resolvers — schema validation
+react-hot-toast — lightweight toasts
+react-icons — icons
+
+npm i react-router-dom axios react-hook-form zod @hookform/resolvers react-hot-toast react-icons
