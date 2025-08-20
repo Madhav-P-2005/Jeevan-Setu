@@ -12,7 +12,7 @@ export const registerUser = async (req , res) => {
 
     try { 
  
-        const {name , email , password , role , bloodGroup, location } = req.body;
+        const {name , email , password , role , bloodGroup, country } = req.body;
 
 
         // 1) Basic Validation
@@ -56,7 +56,7 @@ export const registerUser = async (req , res) => {
             password,
             role,
             bloodGroup,
-            location,
+            country,
         })
 
 
@@ -280,7 +280,7 @@ export const getProfileController = async (req ,res) =>{
 
     try{
         
-         const user = await User.findById(req.userId).select("name email role bloodGroup location createdAt updatedAt donationHistory");
+         const user = await User.findById(req.userId).select("name email role bloodGroup country createdAt updatedAt donationHistory");
 
          if(!user){
             return res.status(404).json({
@@ -298,7 +298,7 @@ export const getProfileController = async (req ,res) =>{
                     email : user.email,
                     role : user.role,
                     bloodGroup : user.bloodGroup,
-                    location : user.location,
+                    country : user.country,
                     createdAt : user.createdAt,
                     updatedAt : user.updatedAt,
                     donationHistory : user.donationHistory,
