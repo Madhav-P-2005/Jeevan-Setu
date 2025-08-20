@@ -35,9 +35,22 @@ const UserSchema = new mongoose.Schema(
       enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
     },
 
-    location: {
-      type: String,
-      default: "",
+    country :{
+      type : String,
+      default : "",
+      trim : true,
+    },
+
+    state : {
+      type : String,
+      default : "",
+      trim : true,
+    },
+
+    city : {
+      type : String,
+      default : "",
+      trim : true,
     },
 
     role: {
@@ -46,13 +59,38 @@ const UserSchema = new mongoose.Schema(
       default: "donor",
     },
 
-    donationHistory: [
+    phone:{
+      type : String,
+      default: "",
+      validate :{
+         validator : (v) => v === "" || /^\d{10}$/.test(v),
+          message : "Phone number must be 10 digits long",
+      },
+    },
+
+    message :{
+      type : String,
+      default : "",
+      trim : true,
+    },
+
+
+    available : {
+      type : Boolean,
+      default : true,
+    },
+
+    lastDonationAt : {
+      type : Date,
+      default : null,
+    },
+
+    donationHistory: 
       {
-        type: mongoose.Schema.Types.ObjectId,
+        type: [{ type :mongoose.Schema.Types.ObjectId , ref:"Donation"}],
         ref: "Donation",
         default : [],
       },
-    ],
   },
 
   {
@@ -94,6 +132,33 @@ UserSchema.methods.comparePassword = async function
 }
 
 // UserSchema.methods  :- Predefined by Mongoose . Lets you define custom instance methods for documents.
+
+
+// Virtual To expose Formatted parts for date , time , month , year and day
+UserSchema.virtual('createdAtParts').get(function () {
+  if(!this.createdAt) return null;
+
+  const d = this.createdAt;
+
+  return {
+    year  : d.getFullYear(),
+    month : d.toLocaleString('en-Us' , {month : 'long'}),   // eg :- "August"
+    day : d.toLocaleString('en-US', {weekday : 'long'}),   // e.g :- "Thursday"
+    date : d.getDate(), 
+    time : d.toLocaleTimeString('en-US' , {hour : '2-digit', minute : '2-digit'}),
+  };
+});
+
+
+// Note :-  Virtuals are not included by default in JSON. If you want them in API responses:
+
+UserSchema.set("toJSON" , {
+    virtuals : true,
+});
+
+UserSchema.set("toObject" , {
+    virtuals : true,
+});
 
 
 // Create and export the model
