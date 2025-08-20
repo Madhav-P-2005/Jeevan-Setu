@@ -148,3 +148,5 @@ react-hot-toast — lightweight toasts
 react-icons — icons
 
 npm i react-router-dom axios react-hook-form zod @hookform/resolvers react-hot-toast react-icons
+
+npm install react-slick slick-carousel --save

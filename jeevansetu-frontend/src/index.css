@@ -2,6 +2,10 @@
 
 @import "tailwindcss";
 
+@import "slick-carousel/slick/slick.css";
+
+@import "slick-carousel/slick/slick-theme.css";
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -17,14 +21,14 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
+/* a {
   font-weight: 500;
   color: #646cff;
   text-decoration: inherit;
-}
+}*/
 a:hover {
-  color: #535bf2;
-}
+  color: #00ff22;
+} 
 
 body {
   margin: 0;

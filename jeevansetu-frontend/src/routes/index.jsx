@@ -23,7 +23,7 @@ export default function AppRoutes(){
 
     return (
             <Routes>
-                 <Route path = "/" element = {<Navigate to = {token ? '/profile'  : '/login'} replace />} />
+                 <Route path = "/" element = {<Navigate to = {token ? '/profile'  : '/home'} replace />} />
                  <Route path = "/home" element = {<Home/>}/>
                  <Route path = "/login" element = {<Login/>}/>
                  <Route path = "/register" element = {<Register/>}/>
@@ -32,7 +32,7 @@ export default function AppRoutes(){
                    <Route path = "/profile" element = {<Dashboard/>}/>
                  </Route>
 
-                 <Route path="*" element = {<Navigate to = "/" replace />} />
+                 <Route path="*" element = {<Navigate to = "/home" replace />} />
             </Routes>
     )
 }
