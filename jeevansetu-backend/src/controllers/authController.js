@@ -12,16 +12,33 @@ export const registerUser = async (req , res) => {
 
     try { 
  
-        const {name , email , password , role , bloodGroup, country } = req.body;
+        const {name , email , password , role , bloodGroup, available , country, phone , city , state , message , lastDonationAt, addressLine1, addressLine2, postalCode , address, instagram , x , facebook } = req.body;
+
+        // Normalize and trim inputs
+        const emailNorm = (email || "").toLowerCase().trim();
+        const nameTrim = (name || "").trim();
+        const cityTrim = (city || "").trim();
+        const addressLine1Trim = (addressLine1 || "").trim();
+        const addressLine2Trim = (addressLine2 || "").trim();
+        const postalCodeTrim = (postalCode || "").trim();
+        const addressTrim = (address || "").trim();
+        const instagramTrim = (instagram || "").trim();
+        const xTrim = (x || "").trim();
+        const facebookTrim = (facebook || "").trim();
+        const stateTrim = (state || "").trim();
+        const countryTrim = (country || "").trim(); 
+        const messageTrim = (message || "").trim();
+        const phoneTrim = (phone || "").trim();
+        const roleNorm = (role || "donor").trim();
 
 
         // 1) Basic Validation
-        if(!name || !email || !password){
+        if(!nameTrim || !emailNorm || !password){
             return res.status(400).json({
                 success : false,
                 message : "Name , email , and password are required"
             });
-        }
+        };
         if(password.length < 6){
             return res.status(400).json({
                 success : false,
@@ -38,10 +55,32 @@ export const registerUser = async (req , res) => {
             });
         }
 
+        // 1c) role validation (enum)
+        const allowedRoles = ["donor", "recipient"];
+        if (roleNorm && !allowedRoles.includes(roleNorm)) {
+            return res.status(400).json({
+                success: false,
+                message: "Valid role is required (donor, recipient)",
+            });
+        }
+
+        // 1d) lastDonationAt validation (optional)
+        let lastDonationAtDate = null;
+        if (lastDonationAt) {
+            const d = new Date(lastDonationAt);
+            if (isNaN(d.getTime())) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid lastDonationAt date",
+                });
+            }
+            lastDonationAtDate = d;
+        }
+
 
 
         // 2) Check duplicate 
-        if(await User.exists({email})){
+        if(await User.exists({ email: emailNorm })){
             return res.status(409).json({
                 success : false,
                 message : "User already exists",
@@ -51,12 +90,28 @@ export const registerUser = async (req , res) => {
 
         // 3) Create User (model pre-save will hash password)
         const user = await User.create({
-            name,
-            email,
+            name: nameTrim,
+            email: emailNorm,
             password,
-            role,
+            role: roleNorm,
             bloodGroup,
-            country,
+            available,
+            country: countryTrim,
+            phone: phoneTrim,
+            city: cityTrim,
+            state: stateTrim,
+            message: messageTrim,
+            address : {
+                line1 : addressTrim || addressLine1Trim,
+                line2 : addressLine2Trim,
+                postalCode : postalCodeTrim,
+            },
+            social:{
+                instagram : instagramTrim,
+                x : xTrim,
+                facebook : facebookTrim,
+            },
+            lastDonationAt: lastDonationAtDate,
         })
 
 
@@ -85,6 +140,16 @@ export const registerUser = async (req , res) => {
                     name : user.name,
                     email : user.email,
                     role : user.role,
+                    bloodGroup : user.bloodGroup,
+                    available : user.available,
+                    country : user.country,
+                    phone : user.phone,
+                    city : user.city,
+                    state : user.state,
+                    message : user.message,
+                    address : user.address,
+                    social : user.social,
+                    lastDonationAt : user.lastDonationAt,
                     createdAt : user.createdAt,
                     updatedAt : user.updatedAt,
                 },
@@ -98,6 +163,7 @@ export const registerUser = async (req , res) => {
         return res.status(500).json({
             success : false,
             message : "Internal Server Error",
+            error: error.message,
         });
     }
 };
@@ -109,8 +175,10 @@ export const loginUser = async (req, res) =>{
     try {
       const { email, password } = req.body;
 
+      const emailNorm = (email || "").toLowerCase().trim();
+
       // 1) Basic Validation
-      if (!email || !password) {
+      if (!emailNorm || !password) {
         return res.status(400).json({
           success: false,
           message: "Please provide email and password",
@@ -119,7 +187,7 @@ export const loginUser = async (req, res) =>{
 
       // 2) Find user by email
 
-      const user = await User.findOne({ email });
+      const user = await User.findOne({ email: emailNorm }).select("+password");
       if (!user) {
         return res.status(401).json({
           success: false,
@@ -132,7 +200,7 @@ export const loginUser = async (req, res) =>{
       if (!isMatch) {
         return res.status(401).json({
           success: false,
-          message: "Invalid credentials",
+          message: "Invalid credentials",    
         });
       }
 
@@ -160,6 +228,16 @@ export const loginUser = async (req, res) =>{
                 name : user.name,
                 email : user.email,
                 role : user.role,
+                bloodGroup : user.bloodGroup,
+                available : user.available,
+                country : user.country,
+                phone : user.phone,
+                city : user.city,
+                state : user.state,
+                message : user.message,
+                address : user.address,
+                social : user.social,
+                lastDonationAt : user.lastDonationAt,
                 createdAt : user.createdAt,
                 updatedAt : user.updatedAt,
             },
@@ -219,21 +297,20 @@ export const refreshAccessTokenController = async (req , res) =>{
 
 
         
-
         // Return new access token only 
         return res.status(200).json({
-            success : true,
-            data : {
+            success: true,
+            data: {
                 accessToken
             }
         })
-    
 
-    }catch(error){
+    }
+    catch (error) {
 
         return res.status(401).json({
-            success : false,
-            message : "Invalid or expired refresh token",
+            success: false,
+            message: "Invalid or expired refresh token",
         })
     }
 }
@@ -242,75 +319,188 @@ export const refreshAccessTokenController = async (req , res) =>{
 
 
 // Logout Controller 
-export const LogoutUserController = async (req , res) => {
+export const LogoutUserController = async (req, res) => {
 
     try {
-    
+
         const isProd = process.env.NODE_ENV === "production";
 
-        res.clearCookie('refreshToken' , {
-            httpOnly : true,
-            secure : isProd,
-            sameSite : isProd ? "none" : "lax",
-            maxAge : 7 * 24 * 60 * 60 * 1000,
+        res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: isProd,
+            sameSite: isProd ? "none" : "lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
         })
 
 
         return res.status(200).json({
-            success : true,
-            message : "User Logged Out Successfully"
+            success: true,
+            message: "User Logged Out Successfully"
         })
 
 
     }
-    catch(error){
+    catch (error) {
 
         return res.status(500).json({
-            success : false,
-            message : "Unable to logout user"
+            success: false,
+            message: "Unable to logout user"
         })
     }
-}
+};
 
+// Update Profile Controller (partial updates)
+export const updateProfileController = async (req, res) => {
+  try {
+    const {
+      name,
+      phone,
+      city,
+      state,
+      country,
+      message,
+      available,
+      bloodGroup,
+      // address can be provided as a single string
+      address,
+      // or legacy fields
+      addressLine1,
+      addressLine2,
+      postalCode,
+      // social
+      instagram,
+      x,
+      facebook,
+    } = req.body;
 
+    const allowedGroups = ["A+","A-","B+","B-","AB+","AB-","O+","O-"];
+    const update = { $set: {} };
 
+    // helper
+    const setIfString = (path, val) => {
+      if (typeof val === "string") update.$set[path] = val.trim();
+    };
+
+    // Personal details
+    setIfString("name", name);
+    setIfString("phone", phone);
+    setIfString("city", city);
+    setIfString("state", state);
+    setIfString("country", country);
+    setIfString("message", message);
+    if (typeof available === "boolean") update.$set.available = available;
+    if (typeof bloodGroup === "string" && allowedGroups.includes(bloodGroup)) {
+      update.$set.bloodGroup = bloodGroup;
+    }
+
+    // Address: map single string to address.line1; keep legacy fields
+    setIfString("address.line1", address);
+    setIfString("address.line1", addressLine1);
+    setIfString("address.line2", addressLine2);
+    setIfString("address.postalCode", postalCode);
+
+    // Social links
+    setIfString("social.instagram", instagram);
+    setIfString("social.x", x);
+    setIfString("social.facebook", facebook);
+
+    if (Object.keys(update.$set).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid update fields provided",
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(req.userId, update, {
+      new: true,
+      runValidators: true,
+      fields:
+        "name email role bloodGroup city state country phone message available lastDonationAt createdAt updatedAt donationHistory address social",
+    }).lean();
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          bloodGroup: user.bloodGroup,
+          available: user.available,
+          country: user.country,
+          phone: user.phone,
+          city: user.city,
+          state: user.state,
+          message: user.message,
+          address: user.address,
+          social: user.social,
+          lastDonationAt: user.lastDonationAt,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          donationHistory: user.donationHistory,
+        },
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
 
 // Dashboard Controller 
-export const getProfileController = async (req ,res) =>{
+export const getProfileController = async (req, res) => {
 
-    try{
-        
-         const user = await User.findById(req.userId).select("name email role bloodGroup country createdAt updatedAt donationHistory");
+    try {
 
-         if(!user){
+        const user = await User.findById(req.userId)
+            .select("name email role bloodGroup city state country phone message available lastDonationAt createdAt updatedAt donationHistory address social")
+            .lean();
+
+        if (!user) {
             return res.status(404).json({
-                success : false,
-                message : "User not found",
+                success: false,
+                message: "User not found",
             })
-         }
-      
+        }
+
         return res.status(200).json({
-            success : true,
-            data : {
-                user : {
-                    id : user._id,
-                    name : user.name,
-                    email : user.email,
-                    role : user.role,
-                    bloodGroup : user.bloodGroup,
-                    country : user.country,
-                    createdAt : user.createdAt,
-                    updatedAt : user.updatedAt,
-                    donationHistory : user.donationHistory,
+            success: true,
+            data: {
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    bloodGroup: user.bloodGroup,
+                    available: user.available,
+                    country: user.country,
+                    phone: user.phone,
+                    city: user.city,
+                    state: user.state,
+                    message: user.message,
+                    address: user.address,
+                    social: user.social,
+                    lastDonationAt: user.lastDonationAt,
+                    createdAt: user.createdAt,
+                    updatedAt: user.updatedAt,
+                    donationHistory: user.donationHistory,
                 },
             },
         });
     }
-    catch(error){
-          return res.status(500).json({
-            success : false,
-            message : "Internal Server Error",
-            error : error.message
-          })
+    catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+            error: error.message
+        })
     }
 }
