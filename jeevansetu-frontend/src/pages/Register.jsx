@@ -27,7 +27,14 @@ const Register = () => {
       confirm_password: "",
       role: "donor",
       bloodGroup: "A+",
-      location: "",
+      country: "",
+      state: "",
+      city: "",
+      address: "",
+      phone: "",
+      message: "",
+      available: true,
+      lastDonationAt: "",
     },
   });
 
@@ -45,17 +52,31 @@ const Register = () => {
         name: data.name,
         email: (data.email || "").trim().toLowerCase(),
         password: data.password,
-        role: data.role, // must be 'donor' or 'recipient'
+        role: data.role, // 'donor' | 'recipient'
         bloodGroup: data.bloodGroup,
-        location: data.location,
+        available: !!data.available,
+        country: (data.country || "").trim(),
+        state: (data.state || "").trim(),
+        city: (data.city || "").trim(),
+        phone: (data.phone || "").trim(),
+        message: (data.message || "").trim(),
       };
+
+      if (data.lastDonationAt) {
+        payload.lastDonationAt = data.lastDonationAt;
+      }
+
+      // Include single address if provided
+      if (data.address && data.address.trim()) {
+        payload.address = data.address.trim();
+      }
 
       const res = await api.post("/auth/register", payload);
       const token = res?.data?.data?.accessToken || res?.data?.accessToken;
       if (!token) throw new Error("No access token returned");
 
       setAccessToken(token);
-      const redirectTo = location.state?.from?.pathname || "/profile";
+      const redirectTo = location.state?.from?.pathname || "/dashboard";
       navigate(redirectTo, { replace: true });
     } catch (err) {
       const msg = err?.response?.data?.message || "Registration failed";
@@ -166,18 +187,91 @@ const Register = () => {
                   <p className="mt-2 text-sm text-rose-300">⚠️ {errors.bloodGroup.message}</p>
                 )}
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-white/90 mb-2">Location</label>
+                <label className="block text-sm font-medium text-white/90 mb-2">Phone (optional)</label>
                 <input
-                  {...register("location", { required: "Location is required" })}
-                  type="text"
-                  className={`w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${errors.location ? "ring-rose-500" : ""}`}
-                  placeholder="City, State"
+                  {...register("phone", { pattern: { value: /^\d{10}$/, message: "Enter 10 digit number" } })}
+                  type="tel"
+                  className={`w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${errors.phone ? "ring-rose-500" : ""}`}
+                  placeholder="9876543210"
                 />
-                {errors.location && (
-                  <p className="mt-2 text-sm text-rose-300">⚠️ {errors.location.message}</p>
+                {errors.phone && (
+                  <p className="mt-2 text-sm text-rose-300">⚠️ {errors.phone.message}</p>
                 )}
+              </div>
+            </div>
+
+            {/* Location */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-white/90 mb-2">Country</label>
+                <input
+                  {...register("country")}
+                  type="text"
+                  className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40"
+                  placeholder="India"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/90 mb-2">State</label>
+                <input
+                  {...register("state")}
+                  type="text"
+                  className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40"
+                  placeholder="Karnataka"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/90 mb-2">City</label>
+                <input
+                  {...register("city")}
+                  type="text"
+                  className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40"
+                  placeholder="Hubballi"
+                />
+              </div>
+            </div>
+
+            {/* Address (optional) */}
+            <div className="grid grid-cols-1 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-white/90 mb-2">Address (optional)</label>
+                <input
+                  {...register("address")}
+                  type="text"
+                  className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40"
+                  placeholder="Street, Area, Landmark"
+                />
+              </div>
+            </div>
+
+            {/* Additional info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-white/90 mb-2">Message (optional)</label>
+                <textarea
+                  {...register("message")}
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40"
+                  placeholder="Any info for recipients or donors"
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-white/90 mb-2">Available to donate?</label>
+                  <label className="inline-flex items-center gap-3 select-none">
+                    <input type="checkbox" {...register("available")} className="h-4 w-4 rounded border-white/20 bg-black/40" />
+                    <span className="text-white/80 text-sm">Keep me available for requests</span>
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white/90 mb-2">Last Donation (optional)</label>
+                  <input
+                    {...register("lastDonationAt")}
+                    type="date"
+                    className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40"
+                  />
+                </div>
               </div>
             </div>
 

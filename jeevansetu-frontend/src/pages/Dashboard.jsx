@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
+import { clearAccessToken } from "../lib/auth";
 
 const Dashboard = () => {
   // State management for dashboard data
@@ -43,9 +44,62 @@ const Dashboard = () => {
     }
   };
 
+  // Helpers
+  const formatDateTime = (iso) => {
+    if (!iso) return "Not provided";
+    try {
+      return new Date(iso).toLocaleString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return String(iso);
+    }
+  };
+
+  const roleBadgeClasses = (role) => {
+    if (role === "donor") return "bg-green-500/20 text-green-300";
+    if (role === "recipient") return "bg-blue-500/20 text-blue-300";
+    return "bg-white/10 text-white/80";
+  };
+
+  // Render a social link if present, else a subtle placeholder
+  const renderSocial = (label, href) => {
+    if (href && typeof href === "string" && href.trim().length > 0) {
+      return (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-rose-300 hover:text-rose-200 underline underline-offset-4 break-all"
+          title={`${label} profile`}
+        >
+          {href}
+        </a>
+      );
+    }
+    return <span className="text-white/60">Not provided</span>;
+  };
+
   // Handle incident updates (refresh data after edit/delete)
   const handleRefresh = () => {
     fetchDashboardData();
+  };
+
+  // Logout handler
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch (e) {
+      // Even if server fails, clear client session
+      console.warn("Logout request failed, clearing client session anyway.");
+    } finally {
+      clearAccessToken();
+      navigate("/login");
+    }
   };
 
   // Loading state
@@ -97,18 +151,131 @@ const Dashboard = () => {
           <p className="mt-1 text-white/70 text-sm">Your Jeevan Setu dashboard</p>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
-            <p className="text-white/60 text-sm">Role</p>
-            <p className="text-xl font-semibold mt-1 capitalize">{profile?.role || "citizen"}</p>
+        {/* Main Content Grid */}
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Personal Information Card */}
+          <div className="lg:col-span-2">
+            <div className="rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
+              <div className="flex items-center mb-6">
+                <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                <h2 className="text-xl font-semibold text-white">Personal Information</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-white/60">Full Name</label>
+                    <p className="text-lg text-white/90 font-medium">{profile?.name || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-white/60">Email Address</label>
+                    <p className="text-lg text-white/90">{profile?.email || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-white/60">Phone Number</label>
+                    <p className="text-lg text-white/90">{profile?.phone || "Not provided"}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-white/60">City</label>
+                    <p className="text-lg text-white/90">{profile?.city || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-white/60">State</label>
+                    <p className="text-lg text-white/90">{profile?.state || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-white/60">Country</label>
+                    <p className="text-lg text-white/90">{profile?.country || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-white/60">Address</label>
+                    <p className="text-white/90">
+                      {profile?.address?.line1?.trim() || profile?.address?.line2?.trim()
+                        ? [profile?.address?.line1, profile?.address?.line2].filter(Boolean).join(", ")
+                        : "Not provided"}
+                    </p>
+                    {profile?.address?.postalCode?.trim() && (
+                      <p className="text-white/70 text-sm mt-1">Postal Code: {profile.address.postalCode}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-white/60">Blood Group</label>
+                    <p className="text-lg text-white/90">{profile?.bloodGroup || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-white/60">Member Since</label>
+                    <p className="text-lg text-white/90">{formatDateTime(profile?.createdAt)}</p>
+                  </div>
+                </div>
+              </div>
+              {/* Message */}
+              <div className="mt-6">
+                <label className="text-sm font-medium text-white/60">Message</label>
+                <p className="text-white/90 mt-1 whitespace-pre-line">
+                  {profile?.message?.trim() ? profile.message : "Not provided"}
+                </p>
+              </div>
+
+              {/* Social Links */}
+              <div className="mt-6">
+                <label className="text-sm font-medium text-white/60">Social Links</label>
+                <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="block text-sm text-white/60">Instagram</span>
+                    <div className="mt-1">{renderSocial("Instagram", profile?.social?.instagram)}</div>
+                  </div>
+                  <div>
+                    <span className="block text-sm text-white/60">X</span>
+                    <div className="mt-1">{renderSocial("X", profile?.social?.x)}</div>
+                  </div>
+                  <div>
+                    <span className="block text-sm text-white/60">Facebook</span>
+                    <div className="mt-1">{renderSocial("Facebook", profile?.social?.facebook)}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
-            <p className="text-white/60 text-sm">Blood Group</p>
-            <p className="text-xl font-semibold mt-1">{profile?.bloodGroup || "-"}</p>
-          </div>
-          <div className="rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
-            <p className="text-white/60 text-sm">Location</p>
-            <p className="text-xl font-semibold mt-1">{profile?.location || "-"}</p>
+
+          {/* Account Status & Quick Actions */}
+          <div className="space-y-6">
+            {/* Account Status Card */}
+            <div className="rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
+              <div className="flex items-center mb-4">
+                <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                <h3 className="text-lg font-semibold text-white">Account Status</h3>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-white/60">Role</span>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${roleBadgeClasses(profile?.role)}`}>
+                    {profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : "Citizen"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-white/60">Status</span>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${profile?.available ? "bg-green-500/20 text-green-300" : "bg-yellow-500/20 text-yellow-300"}`}>
+                    {profile?.available ? "Active" : "Unavailable"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-white/60">User ID</span>
+                  <span className="text-sm text-white/90 font-mono">#{profile?.id || profile?._id || "—"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-white/60">Last Donation</span>
+                  <span className="text-sm text-white/90">{profile?.lastDonationAt ? formatDateTime(profile.lastDonationAt) : "Not recorded"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-white/60">Updated</span>
+                  <span className="text-sm text-white/90">{formatDateTime(profile?.updatedAt)}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -128,9 +295,18 @@ const Dashboard = () => {
           )}
         </div>
 
-        <div className="mt-8 flex justify-center">
-          <button onClick={handleRefresh} className="px-4 py-3 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 font-semibold tracking-wide">
+        <div className="mt-8 flex justify-center gap-3">
+          <button
+            onClick={handleRefresh}
+            className="px-4 py-3 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 font-semibold tracking-wide"
+          >
             Refresh
+          </button>
+          <button
+            onClick={handleLogout}
+            className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white/90 hover:bg-white/10 font-semibold tracking-wide"
+          >
+            Logout
           </button>
         </div>
 
