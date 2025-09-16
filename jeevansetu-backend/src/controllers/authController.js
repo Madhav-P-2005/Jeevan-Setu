@@ -361,6 +361,8 @@ export const updateProfileController = async (req, res) => {
       message,
       available,
       bloodGroup,
+      // last donation date (optional)
+      lastDonationAt,
       // address can be provided as a single string
       address,
       // or legacy fields
@@ -391,6 +393,22 @@ export const updateProfileController = async (req, res) => {
     if (typeof available === "boolean") update.$set.available = available;
     if (typeof bloodGroup === "string" && allowedGroups.includes(bloodGroup)) {
       update.$set.bloodGroup = bloodGroup;
+    }
+
+    // lastDonationAt: allow null to clear, or a valid date string/ISO to set
+    if (lastDonationAt !== undefined) {
+      if (lastDonationAt === null || (typeof lastDonationAt === "string" && lastDonationAt.trim() === "")) {
+        update.$set.lastDonationAt = null;
+      } else {
+        const d = new Date(lastDonationAt);
+        if (isNaN(d.getTime())) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid lastDonationAt date",
+          });
+        }
+        update.$set.lastDonationAt = d;
+      }
     }
 
     // Address: map single string to address.line1; keep legacy fields
