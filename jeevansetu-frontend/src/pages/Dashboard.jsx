@@ -1,46 +1,95 @@
 // Path :- jeevansetu-frontend/src/pages/Dashboard.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { clearAccessToken } from "../lib/auth";
+import StatusCard from "../components/dashboard/StatusCard";
+import PersonalInfoCard from "../components/dashboard/PersonalInfoCard";
+import DonationHistory from "../components/dashboard/DonationHistory";
+import useProfile from "../hooks/useProfile";
+import useProfileUpdate from "../hooks/useProfileUpdate";
 
 const Dashboard = () => {
   // State management for dashboard data
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { profile, setProfile, loading, error, refresh } = useProfile();
+  const {
+    savingAvailability,
+    savingLastDonation,
+    updateAvailability,
+    updateLastDonation,
+    updateProfile,
+  } = useProfileUpdate({ setProfile, refresh });
+  const [lastDonationInput, setLastDonationInput] = useState("");
+  const [inlineMsg, setInlineMsg] = useState("");
   const navigate = useNavigate();
 
-  // Fetch all dashboard data on component mount
+  // Prime date input from loaded profile
   useEffect(() => {
-    fetchDashboardData();
-  }, [navigate]);
+    if (!profile) return;
+    if (profile?.lastDonationAt) {
+      try {
+        const d = new Date(profile.lastDonationAt);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        setLastDonationInput(`${yyyy}-${mm}-${dd}`);
+      } catch {}
+    } else {
+      setLastDonationInput("");
+    }
+  }, [profile]);
 
-  // Function to fetch dashboard data (can be called to refresh)
-  const fetchDashboardData = async () => {
+  // M1 handlers
+  const onToggleAvailable = async () => {
+    if (!profile) return;
+    const next = !profile.available;
+    setInlineMsg("");
     try {
-      setLoading(true);
-
-      // Fetch authenticated user's profile
-      const profileResponse = await api.get("/auth/profile");
-      const user = profileResponse?.data?.data?.user || null;
-      setProfile(user);
-      setError("");
-
-      console.log("✅ Dashboard data loaded successfully");
-      console.log("📊 Profile:", user);
-    } catch (err) {
-      console.error("❌ Error loading dashboard data:", err);
-
-      if (err.response?.status === 401) {
-        setError("Please log in to access the dashboard.");
-        setTimeout(() => navigate("/login"), 2000);
-      } else {
-        setError("Failed to load dashboard data. Please try again.");
-      }
+      await updateAvailability(next);
+      setInlineMsg("Availability updated");
+    } catch {
+      setInlineMsg("Failed to update availability");
     } finally {
-      setLoading(false);
+      setTimeout(() => setInlineMsg(""), 2000);
+    }
+  };
+
+  const onSaveLastDonation = async () => {
+    if (savingLastDonation) return;
+    setInlineMsg("");
+    try {
+      await updateLastDonation(lastDonationInput || null);
+      setInlineMsg("Last donation saved");
+    } catch {
+      setInlineMsg("Failed to save date");
+    } finally {
+      setTimeout(() => setInlineMsg(""), 2000);
+    }
+  };
+
+  const onClearLastDonation = async () => {
+    if (savingLastDonation) return;
+    setInlineMsg("");
+    try {
+      await updateLastDonation(null);
+      setLastDonationInput("");
+      setInlineMsg("Last donation cleared");
+    } catch {
+      setInlineMsg("Failed to clear date");
+    } finally {
+      setTimeout(() => setInlineMsg(""), 2000);
+    }
+  };
+
+  const onCopyId = async () => {
+    try {
+      await navigator.clipboard.writeText(profile?.id || profile?._id || "");
+      setInlineMsg("ID copied");
+      setTimeout(() => setInlineMsg(""), 1500);
+    } catch {
+      setInlineMsg("Copy failed");
+      setTimeout(() => setInlineMsg("") , 1500);
     }
   };
 
@@ -66,6 +115,21 @@ const Dashboard = () => {
     return "bg-white/10 text-white/80";
   };
 
+  // Relative time helper for tooltip
+  const relativeTime = (iso) => {
+    if (!iso) return "";
+    const now = Date.now();
+    const t = new Date(iso).getTime();
+    const diff = Math.max(0, Math.floor((now - t) / 1000));
+    if (diff < 60) return `${diff}s ago`;
+    const m = Math.floor(diff / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    return `${d}d ago`;
+  };
+
   // Render a social link if present, else a subtle placeholder
   const renderSocial = (label, href) => {
     if (href && typeof href === "string" && href.trim().length > 0) {
@@ -86,7 +150,7 @@ const Dashboard = () => {
 
   // Handle incident updates (refresh data after edit/delete)
   const handleRefresh = () => {
-    fetchDashboardData();
+    refresh();
   };
 
   // Logout handler
@@ -155,145 +219,31 @@ const Dashboard = () => {
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Personal Information Card */}
           <div className="lg:col-span-2">
-            <div className="rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
-              <div className="flex items-center mb-6">
-                <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                <h2 className="text-xl font-semibold text-white">Personal Information</h2>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-white/60">Full Name</label>
-                    <p className="text-lg text-white/90 font-medium">{profile?.name || "Not provided"}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-white/60">Email Address</label>
-                    <p className="text-lg text-white/90">{profile?.email || "Not provided"}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-white/60">Phone Number</label>
-                    <p className="text-lg text-white/90">{profile?.phone || "Not provided"}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-white/60">City</label>
-                    <p className="text-lg text-white/90">{profile?.city || "Not provided"}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-white/60">State</label>
-                    <p className="text-lg text-white/90">{profile?.state || "Not provided"}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-white/60">Country</label>
-                    <p className="text-lg text-white/90">{profile?.country || "Not provided"}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-white/60">Address</label>
-                    <p className="text-white/90">
-                      {profile?.address?.line1?.trim() || profile?.address?.line2?.trim()
-                        ? [profile?.address?.line1, profile?.address?.line2].filter(Boolean).join(", ")
-                        : "Not provided"}
-                    </p>
-                    {profile?.address?.postalCode?.trim() && (
-                      <p className="text-white/70 text-sm mt-1">Postal Code: {profile.address.postalCode}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-white/60">Blood Group</label>
-                    <p className="text-lg text-white/90">{profile?.bloodGroup || "Not provided"}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-white/60">Member Since</label>
-                    <p className="text-lg text-white/90">{formatDateTime(profile?.createdAt)}</p>
-                  </div>
-                </div>
-              </div>
-              {/* Message */}
-              <div className="mt-6">
-                <label className="text-sm font-medium text-white/60">Message</label>
-                <p className="text-white/90 mt-1 whitespace-pre-line">
-                  {profile?.message?.trim() ? profile.message : "Not provided"}
-                </p>
-              </div>
-
-              {/* Social Links */}
-              <div className="mt-6">
-                <label className="text-sm font-medium text-white/60">Social Links</label>
-                <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <span className="block text-sm text-white/60">Instagram</span>
-                    <div className="mt-1">{renderSocial("Instagram", profile?.social?.instagram)}</div>
-                  </div>
-                  <div>
-                    <span className="block text-sm text-white/60">X</span>
-                    <div className="mt-1">{renderSocial("X", profile?.social?.x)}</div>
-                  </div>
-                  <div>
-                    <span className="block text-sm text-white/60">Facebook</span>
-                    <div className="mt-1">{renderSocial("Facebook", profile?.social?.facebook)}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <PersonalInfoCard profile={profile} formatDateTime={formatDateTime} />
           </div>
 
           {/* Account Status & Quick Actions */}
           <div className="space-y-6">
-            {/* Account Status Card */}
-            <div className="rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
-              <div className="flex items-center mb-4">
-                <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                <h3 className="text-lg font-semibold text-white">Account Status</h3>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-white/60">Role</span>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${roleBadgeClasses(profile?.role)}`}>
-                    {profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : "Citizen"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-white/60">Status</span>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${profile?.available ? "bg-green-500/20 text-green-300" : "bg-yellow-500/20 text-yellow-300"}`}>
-                    {profile?.available ? "Active" : "Unavailable"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-white/60">User ID</span>
-                  <span className="text-sm text-white/90 font-mono">#{profile?.id || profile?._id || "—"}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-white/60">Last Donation</span>
-                  <span className="text-sm text-white/90">{profile?.lastDonationAt ? formatDateTime(profile.lastDonationAt) : "Not recorded"}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-white/60">Updated</span>
-                  <span className="text-sm text-white/90">{formatDateTime(profile?.updatedAt)}</span>
-                </div>
-              </div>
-            </div>
+            <StatusCard
+              profile={profile}
+              savingAvail={savingAvailability}
+              savingDate={savingLastDonation}
+              lastDonationInput={lastDonationInput}
+              inlineMsg={inlineMsg}
+              roleBadgeClasses={roleBadgeClasses}
+              formatDateTime={formatDateTime}
+              relativeTime={relativeTime}
+              onToggleAvailable={onToggleAvailable}
+              onSaveLastDonation={onSaveLastDonation}
+              onClearLastDonation={onClearLastDonation}
+              onCopyId={onCopyId}
+              onRefresh={handleRefresh}
+              onDateChange={(v) => setLastDonationInput(v)}
+            />
           </div>
         </div>
 
-        <div className="mt-8 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
-          <h3 className="text-lg font-semibold">Donation History</h3>
-          {!profile?.donationHistory?.length ? (
-            <p className="text-white/60 mt-2">No donations recorded yet.</p>
-          ) : (
-            <ul className="mt-4 divide-y divide-white/10">
-              {profile.donationHistory.map((d, idx) => (
-                <li key={idx} className="py-3 flex items-center justify-between">
-                  <span className="text-white/80">{d?.date ? new Date(d.date).toLocaleDateString() : "—"}</span>
-                  <span className="text-white/60 text-sm">{d?.notes || "Donation"}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <DonationHistory donationHistory={profile?.donationHistory} />
 
         <div className="mt-8 flex justify-center gap-3">
           <button
