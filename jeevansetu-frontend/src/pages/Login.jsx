@@ -1,6 +1,5 @@
 // Path :- jeevansetu-frontend/src/pages/Login.jsx
 
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -8,6 +7,8 @@ import api from "../lib/api";
 import { setAccessToken } from "../lib/auth";
 import { BiDonateBlood } from "react-icons/bi";
 import { FaLock } from "react-icons/fa";
+import { FiEye, FiEyeOff } from "react-icons/fi";
+import toast from "../lib/toast";
 
 const Login = () => {
   const {
@@ -22,6 +23,7 @@ const Login = () => {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -39,9 +41,17 @@ const Login = () => {
       setAccessToken(token);
       const redirectTo = location.state?.from?.pathname || "/profile";
       navigate(redirectTo, { replace: true });
+      toast.success("Welcome back!");
     } catch (err) {
+      const status = err?.response?.status;
       const msg = err?.response?.data?.message || "Invalid email or password";
       setError(msg);
+      if (status === 403) {
+        toast.error(msg);
+        navigate("/verify-email", {
+          state: { email: payload.email },
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -60,14 +70,19 @@ const Login = () => {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-600 via-red-600 to-orange-500 flex items-center justify-center shadow-2xl">
             <BiDonateBlood className="w-7 h-7 text-white" />
           </div>
-          <h2 className="mt-4 text-3xl font-extrabold tracking-tight">Welcome back</h2>
+          <h2 className="mt-4 text-3xl font-extrabold tracking-tight">
+            Welcome back
+          </h2>
           <p className="mt-1 text-white/70 text-sm">Sign in to जीवन Setu</p>
         </div>
 
         <div className="mt-8 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-white/90 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-white/90 mb-2"
+              >
                 Email address
               </label>
               <input
@@ -77,37 +92,61 @@ const Login = () => {
                   maxLength: 50,
                   minLength: 3,
                 })}
-                className={`w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${errors.email ? "ring-rose-500" : ""}`}
+                className={`w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${
+                  errors.email ? "ring-rose-500" : ""
+                }`}
                 type="email"
                 placeholder="you@example.com"
                 aria-invalid={errors.email ? "true" : "false"}
               />
               {errors.email && (
-                <p className="mt-2 text-sm text-rose-300 flex items-center">⚠️ {errors.email.message}</p>
+                <p className="mt-2 text-sm text-rose-300 flex items-center">
+                  ⚠️ {errors.email.message}
+                </p>
               )}
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label htmlFor="password" className="block text-sm font-medium text-white/90">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-white/90"
+                >
                   Password
                 </label>
-                <Link to="/forgot-password" className="text-xs text-rose-300 hover:text-rose-200">
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-rose-300 hover:text-rose-200"
+                >
                   Forgot?
                 </Link>
               </div>
               <div className="relative">
                 <input
                   id="password"
-                  {...register("password", { required: "Password is required" })}
-                  type="password"
+                  {...register("password", {
+                    required: "Password is required",
+                  })}
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className={`w-full px-4 py-3 pr-10 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${errors.password ? "ring-rose-500" : ""}`}
+                  className={`w-full px-4 py-3 pr-12 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${
+                    errors.password ? "ring-rose-500" : ""
+                  }`}
                 />
-                <FaLock className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40" />
+                <FaLock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
               </div>
               {errors.password && (
-                <p className="mt-2 text-sm text-rose-300 flex items-center">⚠️ {errors.password.message}</p>
+                <p className="mt-2 text-sm text-rose-300 flex items-center">
+                  ⚠️ {errors.password.message}
+                </p>
               )}
             </div>
 
@@ -127,8 +166,11 @@ const Login = () => {
           </form>
 
           <div className="mt-6 text-center text-sm text-white/70">
-            Don’t have an account?{' '}
-            <Link to="/register" className="text-rose-300 hover:text-rose-200 font-medium">
+            Don’t have an account?{" "}
+            <Link
+              to="/register"
+              className="text-rose-300 hover:text-rose-200 font-medium"
+            >
               Register
             </Link>
           </div>

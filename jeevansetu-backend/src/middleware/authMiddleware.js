@@ -1,9 +1,10 @@
 // jeevansetu-backend/src/middleware/authMiddleware.js
 
 import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
 // Auth Middleware
-export const protect = (req, res, next) => {
+export const protect = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization || "";
 
@@ -17,7 +18,12 @@ export const protect = (req, res, next) => {
 
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = payload.id;
-    req.user = { id: payload.id };
+
+    if (!req.user) {
+      const user = await User.findById(payload.id).select("role");
+      req.user = user ? { id: payload.id, role: user.role } : { id: payload.id };
+    }
+
     return next();
   } catch (error) {
     return res

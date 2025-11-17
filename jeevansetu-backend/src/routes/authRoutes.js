@@ -2,7 +2,18 @@
 
 import express from "express";
 
-import { registerUser, loginUser , refreshAccessTokenController , LogoutUserController , getProfileController , updateProfileController} from "../controllers/authController.js";
+import {
+  registerUser,
+  loginUser,
+  refreshAccessTokenController,
+  LogoutUserController,
+  getProfileController,
+  updateProfileController,
+  verifyEmailOtp,
+  resendEmailOtp,
+  forgotPassword,
+  resetPassword,
+} from "../controllers/authController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -14,6 +25,10 @@ const router = express.Router();
 // Routes 
 router.post('/register' ,  registerUser);
 router.post('/login' , loginUser);
+router.post('/verify-email', verifyEmailOtp);
+router.post('/resend-otp', resendEmailOtp);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 router.get('/protected', protect , (req ,res) =>{
     return res.status(200).json({
         success : true,

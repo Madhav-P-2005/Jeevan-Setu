@@ -9,18 +9,17 @@ import connectDB from "./config/db.js";
 import healthRoute from "./routes/health.js";
 import cookieParser from "cookie-parser";
 import authRoutes from "./routes/authRoutes.js";
+import requestRoutes from "./routes/requestRoutes.js";
+import donationRoutes from "./routes/donationRoutes.js";
 
 // Load env variables
 dotenv.config();
 
-
 // Connect DB
 connectDB();
 
-
 // Initialize app
 const app = express();
-
 
 // Middleware 
 app.use(helmet());
@@ -29,12 +28,11 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(morgan("dev"));
 
-
 // Routes 
 app.use("/api/health", healthRoute);
-
 app.use("/api/auth" , authRoutes);
-
+app.use("/api/requests", requestRoutes);
+app.use("/api/donations", donationRoutes);
 
 // Server listen
 const PORT = process.env.PORT || 3000;

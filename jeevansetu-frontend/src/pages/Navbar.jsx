@@ -1,21 +1,12 @@
 // Path :- jeevansetu-frontend/src/pages/Navbar.jsx
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaMoon, FaSun } from "react-icons/fa6";
 import { FiMenu, FiX } from "react-icons/fi";
 import { BiDonateBlood } from "react-icons/bi";
 
 export default function Navbar() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
-
-  // Sync a 'dark' class to <html> for future Tailwind dark styles
-  useEffect(() => {
-    const root = document.documentElement;
-    if (darkMode) root.classList.add("dark");
-    else root.classList.remove("dark");
-  }, [darkMode]);
 
   return (
     <header className="sticky top-3 z-50">
@@ -57,19 +48,19 @@ export default function Navbar() {
               >
                 Get Started
               </button>
-              {/* Dark/Light mode toggle (single button) */}
-              <button
-                aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-                onClick={() => setDarkMode((v) => !v)}
-                className={darkMode ? "ml-2 p-2 rounded-lg text-blue-200 hover:text-blue-100" : "ml-2 p-2 rounded-lg text-yellow-300 hover:text-yellow-200"}
-              >
-                {darkMode ? <FaMoon className="w-5 h-5" /> : <FaSun className="w-5 h-5" />}
-              </button>
             </div>
             {/* Mobile hamburger */}
             <div className="md:hidden flex items-center gap-2">
-              <button aria-label="Toggle menu" onClick={() => setOpen((v) => !v)} className="p-2 rounded-lg text-white/90 hover:bg-white/10">
-                {open ? <FiX className="w-6 h-6" /> : <FiMenu className="w-6 h-6" />}
+              <button
+                aria-label="Toggle menu"
+                onClick={() => setOpen((v) => !v)}
+                className="p-2 rounded-lg text-white/90 hover:bg-white/10"
+              >
+                {open ? (
+                  <FiX className="w-6 h-6" />
+                ) : (
+                  <FiMenu className="w-6 h-6" />
+                )}
               </button>
             </div>
           </div>
@@ -97,15 +88,6 @@ export default function Navbar() {
               >
                 Get Started
               </button>
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-                  onClick={() => setDarkMode((v) => !v)}
-                  className={darkMode ? "p-2 rounded-lg text-blue-200" : "p-2 rounded-lg text-yellow-300"}
-                >
-                  {darkMode ? <FaMoon className="w-5 h-5" /> : <FaSun className="w-5 h-5" />}
-                </button>
-              </div>
             </div>
           </div>
         )}

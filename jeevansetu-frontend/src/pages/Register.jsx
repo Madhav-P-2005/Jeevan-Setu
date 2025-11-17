@@ -1,24 +1,27 @@
 // Path :- jeevansetu-frontend/src/pages/Register.jsx
 
-
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import api from "../lib/api";
-import { setAccessToken } from "../lib/auth";
+import toast from "../lib/toast";
 import { BiDonateBlood } from "react-icons/bi";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 const Register = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const [params] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     setError: setFormError,
+    setValue,
   } = useForm({
     defaultValues: {
       name: "",
@@ -35,13 +38,25 @@ const Register = () => {
       message: "",
       available: true,
       lastDonationAt: "",
+      instagram: "",
+      x: "",
+      facebook: "",
     },
   });
+
+  // Pre-select role based on ?role=donor|recipient from URL if provided
+  useEffect(() => {
+    const roleParam = (params.get("role") || "").toLowerCase();
+    if (roleParam === "donor" || roleParam === "recipient") {
+      setValue("role", roleParam);
+    }
+  }, [params, setValue]);
 
   const onSubmit = async (data) => {
     if (data.password !== data.confirm_password) {
       setFormError("confirm_password", { message: "Passwords do not match" });
       setSubmitError("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
 
@@ -60,6 +75,9 @@ const Register = () => {
         city: (data.city || "").trim(),
         phone: (data.phone || "").trim(),
         message: (data.message || "").trim(),
+        instagram: (data.instagram || "").trim(),
+        x: (data.x || "").trim(),
+        facebook: (data.facebook || "").trim(),
       };
 
       if (data.lastDonationAt) {
@@ -71,16 +89,18 @@ const Register = () => {
         payload.address = data.address.trim();
       }
 
-      const res = await api.post("/auth/register", payload);
-      const token = res?.data?.data?.accessToken || res?.data?.accessToken;
-      if (!token) throw new Error("No access token returned");
-
-      setAccessToken(token);
-      const redirectTo = location.state?.from?.pathname || "/dashboard";
-      navigate(redirectTo, { replace: true });
+      await api.post("/auth/register", payload);
+      toast.success(
+        "Registration successful! Please verify the OTP sent to your email."
+      );
+      navigate("/verify-email", {
+        replace: true,
+        state: { email: payload.email },
+      });
     } catch (err) {
       const msg = err?.response?.data?.message || "Registration failed";
       setSubmitError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -99,71 +119,124 @@ const Register = () => {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-600 via-red-600 to-orange-500 flex items-center justify-center shadow-2xl">
             <BiDonateBlood className="w-7 h-7 text-white" />
           </div>
-          <h2 className="mt-4 text-3xl font-extrabold tracking-tight">Create your account</h2>
-          <p className="mt-1 text-white/70 text-sm">Join the जीवन Setu family</p>
+          <h2 className="mt-4 text-3xl font-extrabold tracking-tight">
+            Create your account
+          </h2>
+          <p className="mt-1 text-white/70 text-sm">
+            Join the जीवन Setu family
+          </p>
         </div>
 
         <div className="mt-8 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-white/90 mb-2">Full Name</label>
+                <label className="block text-sm font-medium text-white/90 mb-2">
+                  Full Name
+                </label>
                 <input
                   {...register("name", { required: "Full name is required" })}
                   type="text"
-                  className={`w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${errors.name ? "ring-rose-500" : ""}`}
+                  className={`w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${
+                    errors.name ? "ring-rose-500" : ""
+                  }`}
                   placeholder="Enter your full name"
                 />
                 {errors.name && (
-                  <p className="mt-2 text-sm text-rose-300">⚠️ {errors.name.message}</p>
+                  <p className="mt-2 text-sm text-rose-300">
+                    ⚠️ {errors.name.message}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/90 mb-2">Email Address</label>
+                <label className="block text-sm font-medium text-white/90 mb-2">
+                  Email Address
+                </label>
                 <input
                   {...register("email", { required: "Email is required" })}
                   type="email"
-                  className={`w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${errors.email ? "ring-rose-500" : ""}`}
+                  className={`w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${
+                    errors.email ? "ring-rose-500" : ""
+                  }`}
                   placeholder="you@example.com"
                 />
                 {errors.email && (
-                  <p className="mt-2 text-sm text-rose-300">⚠️ {errors.email.message}</p>
+                  <p className="mt-2 text-sm text-rose-300">
+                    ⚠️ {errors.email.message}
+                  </p>
                 )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-white/90 mb-2">Password</label>
+              <div className="relative">
+                <label className="block text-sm font-medium text-white/90 mb-2">
+                  Password
+                </label>
                 <input
-                  {...register("password", { required: "Password is required", minLength: { value: 6, message: "At least 6 characters" } })}
-                  type="password"
-                  className={`w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${errors.password ? "ring-rose-500" : ""}`}
+                  {...register("password", {
+                    required: "Password is required",
+                    minLength: { value: 6, message: "At least 6 characters" },
+                  })}
+                  type={showPassword ? "text" : "password"}
+                  className={`w-full px-4 py-3 pr-11 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${
+                    errors.password ? "ring-rose-500" : ""
+                  }`}
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-10 -translate-y-1/2 text-white/60 hover:text-white"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
                 {errors.password && (
-                  <p className="mt-2 text-sm text-rose-300">⚠️ {errors.password.message}</p>
+                  <p className="mt-2 text-sm text-rose-300">
+                    ⚠️ {errors.password.message}
+                  </p>
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-white/90 mb-2">Confirm Password</label>
+              <div className="relative">
+                <label className="block text-sm font-medium text-white/90 mb-2">
+                  Confirm Password
+                </label>
                 <input
-                  {...register("confirm_password", { required: "Confirm your password" })}
-                  type="password"
-                  className={`w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${errors.confirm_password ? "ring-rose-500" : ""}`}
+                  {...register("confirm_password", {
+                    required: "Confirm your password",
+                  })}
+                  type={showConfirmPassword ? "text" : "password"}
+                  className={`w-full px-4 py-3 pr-11 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${
+                    errors.confirm_password ? "ring-rose-500" : ""
+                  }`}
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  className="absolute right-3 top-10 -translate-y-1/2 text-white/60 hover:text-white"
+                  aria-label={
+                    showConfirmPassword ? "Hide password" : "Show password"
+                  }
+                >
+                  {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
                 {errors.confirm_password && (
-                  <p className="mt-2 text-sm text-rose-300">⚠️ {errors.confirm_password.message}</p>
+                  <p className="mt-2 text-sm text-rose-300">
+                    ⚠️ {errors.confirm_password.message}
+                  </p>
                 )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium text-white/90 mb-2">Role</label>
+                <label className="block text-sm font-medium text-white/90 mb-2">
+                  Role
+                </label>
                 <select
                   {...register("role", { required: true })}
                   className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500"
@@ -174,29 +247,53 @@ const Register = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/90 mb-2">Blood Group</label>
+                <label className="block text-sm font-medium text-white/90 mb-2">
+                  Blood Group
+                </label>
                 <select
-                  {...register("bloodGroup", { required: "Blood group is required" })}
-                  className={`w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 ${errors.bloodGroup ? "ring-rose-500" : ""}`}
+                  {...register("bloodGroup", {
+                    required: "Blood group is required",
+                  })}
+                  className={`w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 ${
+                    errors.bloodGroup ? "ring-rose-500" : ""
+                  }`}
                 >
-                  {["A+","A-","B+","B-","AB+","AB-","O+","O-"].map(bg => (
-                    <option key={bg} value={bg}>{bg}</option>
-                  ))}
+                  {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(
+                    (bg) => (
+                      <option key={bg} value={bg}>
+                        {bg}
+                      </option>
+                    )
+                  )}
                 </select>
                 {errors.bloodGroup && (
-                  <p className="mt-2 text-sm text-rose-300">⚠️ {errors.bloodGroup.message}</p>
+                  <p className="mt-2 text-sm text-rose-300">
+                    ⚠️ {errors.bloodGroup.message}
+                  </p>
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/90 mb-2">Phone (optional)</label>
+                <label className="block text-sm font-medium text-white/90 mb-2">
+                  Phone
+                </label>
                 <input
-                  {...register("phone", { pattern: { value: /^\d{10}$/, message: "Enter 10 digit number" } })}
+                  {...register("phone", {
+                    required: "Phone number is required",
+                    pattern: {
+                      value: /^\d{10}$/,
+                      message: "Enter 10 digit number",
+                    },
+                  })}
                   type="tel"
-                  className={`w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${errors.phone ? "ring-rose-500" : ""}`}
+                  className={`w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${
+                    errors.phone ? "ring-rose-500" : ""
+                  }`}
                   placeholder="9876543210"
                 />
                 {errors.phone && (
-                  <p className="mt-2 text-sm text-rose-300">⚠️ {errors.phone.message}</p>
+                  <p className="mt-2 text-sm text-rose-300">
+                    ⚠️ {errors.phone.message}
+                  </p>
                 )}
               </div>
             </div>
@@ -204,7 +301,9 @@ const Register = () => {
             {/* Location */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium text-white/90 mb-2">Country</label>
+                <label className="block text-sm font-medium text-white/90 mb-2">
+                  Country
+                </label>
                 <input
                   {...register("country")}
                   type="text"
@@ -213,7 +312,9 @@ const Register = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/90 mb-2">State</label>
+                <label className="block text-sm font-medium text-white/90 mb-2">
+                  State
+                </label>
                 <input
                   {...register("state")}
                   type="text"
@@ -222,7 +323,9 @@ const Register = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/90 mb-2">City</label>
+                <label className="block text-sm font-medium text-white/90 mb-2">
+                  City
+                </label>
                 <input
                   {...register("city")}
                   type="text"
@@ -235,7 +338,9 @@ const Register = () => {
             {/* Address (optional) */}
             <div className="grid grid-cols-1 gap-6">
               <div>
-                <label className="block text-sm font-medium text-white/90 mb-2">Address (optional)</label>
+                <label className="block text-sm font-medium text-white/90 mb-2">
+                  Address (optional)
+                </label>
                 <input
                   {...register("address")}
                   type="text"
@@ -246,26 +351,113 @@ const Register = () => {
             </div>
 
             {/* Additional info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-white/90 mb-2">Message (optional)</label>
-                <textarea
-                  {...register("message")}
-                  rows={3}
-                  className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40"
-                  placeholder="Any info for recipients or donors"
-                />
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-white/90 mb-2">
+                    Message (optional)
+                  </label>
+                  <textarea
+                    {...register("message")}
+                    rows={3}
+                    className="w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40"
+                    placeholder="Any info for recipients or donors"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-white/90 mb-2">
+                      Instagram (optional)
+                    </label>
+                    <input
+                      {...register("instagram", {
+                        pattern: {
+                          value: /^https?:\/\/(www\.)?instagram\.com\/.+/i,
+                          message: "Enter a valid instagram.com URL",
+                        },
+                      })}
+                      type="url"
+                      className={`w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${
+                        errors.instagram ? "ring-rose-500" : ""
+                      }`}
+                      placeholder="https://instagram.com/username"
+                    />
+                    {errors.instagram && (
+                      <p className="mt-2 text-sm text-rose-300">
+                        ⚠️ {errors.instagram.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-white/90 mb-2">
+                      X (optional)
+                    </label>
+                    <input
+                      {...register("x", {
+                        pattern: {
+                          value: /^https?:\/\/(www\.)?x\.com\/.+/i,
+                          message: "Enter a valid x.com URL",
+                        },
+                      })}
+                      type="url"
+                      className={`w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${
+                        errors.x ? "ring-rose-500" : ""
+                      }`}
+                      placeholder="https://x.com/username"
+                    />
+                    {errors.x && (
+                      <p className="mt-2 text-sm text-rose-300">
+                        ⚠️ {errors.x.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-white/90 mb-2">
+                      Facebook (optional)
+                    </label>
+                    <input
+                      {...register("facebook", {
+                        pattern: {
+                          value: /^https?:\/\/(www\.)?facebook\.com\/.+/i,
+                          message: "Enter a valid facebook.com URL",
+                        },
+                      })}
+                      type="url"
+                      className={`w-full px-4 py-3 rounded-xl bg-black/40 border border-white/10 focus:outline-none focus:ring-2 focus:ring-rose-500 placeholder-white/40 ${
+                        errors.facebook ? "ring-rose-500" : ""
+                      }`}
+                      placeholder="https://facebook.com/username"
+                    />
+                    {errors.facebook && (
+                      <p className="mt-2 text-sm text-rose-300">
+                        ⚠️ {errors.facebook.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
+
               <div className="grid grid-cols-1 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-white/90 mb-2">Available to donate?</label>
+                  <label className="block text-sm font-medium text-white/90 mb-2">
+                    Available to donate?
+                  </label>
                   <label className="inline-flex items-center gap-3 select-none">
-                    <input type="checkbox" {...register("available")} className="h-4 w-4 rounded border-white/20 bg-black/40" />
-                    <span className="text-white/80 text-sm">Keep me available for requests</span>
+                    <input
+                      type="checkbox"
+                      {...register("available")}
+                      className="h-4 w-4 rounded border-white/20 bg-black/40"
+                    />
+                    <span className="text-white/80 text-sm">
+                      Keep me available for requests
+                    </span>
                   </label>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-white/90 mb-2">Last Donation (optional)</label>
+                  <label className="block text-sm font-medium text-white/90 mb-2">
+                    Last Donation (optional)
+                  </label>
                   <input
                     {...register("lastDonationAt")}
                     type="date"
@@ -291,8 +483,11 @@ const Register = () => {
           </form>
 
           <div className="mt-6 text-center text-sm text-white/70">
-            Already have an account?{' '}
-            <Link to="/login" className="text-rose-300 hover:text-rose-200 font-medium">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="text-rose-300 hover:text-rose-200 font-medium"
+            >
               Sign in here
             </Link>
           </div>

@@ -1,304 +1,269 @@
-# JeevanSetu Backend 
+# JeevanSetu – Real-Time Blood & Plasma Donor App
 
-# Installation Setup :- 
+**Project Overview :-
+**JeevanSetu is a MERN-stack application that connects blood/plasma donors and recipients in real time. Donors and recipients register with detailed profiles, manage availability, and handle requests via a consistent, themed UI. The platform handles role-based onboarding, secure JWT authentication (access + HttpOnly refresh tokens), request management with full status tracking, donor matching, and auto-logged donation histories, giving both sides clear visibility into every step of the donation lifecycle\*\*\*\*
 
-1. Clone the repository 
-2. Navigate to the project directory 
-3. Install dependencies using npm install 
-4. Set up environment variables 
-5. Start the server using npm start 
+## Table of contents
 
+1. [Quick start](#quick-start)
+2. [Tech stack](#tech-stack)
+3. [Repository structure](#repository-structure)
+4. [Configuration](#configuration)
+5. [Running locally](#running-locally)
+6. [Core features](#core-features)
+7. [Functional flow](#functional-flow)
+8. [Donor–recipient relationship](#donorrecipient-relationship)
+9. [API overview](#api-overview)
+10. [Data models](#data-models)
+11. [Frontend pages](#frontend-pages)
+12. [Testing checklist](#testing-checklist)
+13. [Troubleshooting](#troubleshooting)
 
-# Dependencies 
+## Quick start
 
-Core server: express
+```bash
+git clone <repo-url>
+cd "JeevanSetu – Real-Time Blood-And-Plasma Donor App"
 
-Database: mongoose
-
-Environment vars: dotenv
-
-Security: helmet, cors
-
-Logging: morgan
-
-Dev tools: nodemon (dev only)
-
-
-npm install express mongoose dotenv cors body-parser jsonwebtoken bcryptjs nodemailer axios dotenv
-
-
-
-package name: (jeevansetu-backend) jeevansetu-package
-version: (1.0.0)                                                                                                          
-description: "JeevanSetu - Our Minor College Project(FSWD)"
-entry point: (index.js) server.js                                                                                         
-test command:                                                                                                             
-git repository:                                                                                                           
-keywords: blood-donation,healthcare , emergency, nodejs , expressjs, Full stack web developement
-author: Madhav P madhavp2023@gmail.com
-license: (ISC) (MIT)
-type: (commonjs)                                                                                                          
-About to write to E:\JeevanSetu – Real-Time Blood & Plasma Donor App\jeevansetu-backend\package.json:
-
-npm init :- 
-
-
-{
-  "name": "jeevansetu-package",
-  "version": "1.0.0",
-  "description": "\"JeevanSetu - Our Minor College Project(FSWD)\"",
-  "main": "server.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [
-    "blood-donation",
-    "healthcare",
-    "emergency",
-    "nodejs",
-    "expressjs",
-    "Full",
-    "stack",
-    "web",
-    "developement"
-  ],
-  "author": "Madhav P madhavp2023@gmail.com",
-  "license": "(MIT)",
-  "type": "commonjs"
-}
-
-
-Is this OK? (yes) yes
-
-
-
-express@4 - Web framework (you chose stable version - smart!)
-mongoose - MongoDB object modeling
-dotenv - Environment variables management
-cors - Cross-origin resource sharing (for frontend-backend communication)
-helmet - Security middleware
-morgan - HTTP request logger
-
-
-npm install -D nodemon :- Why nodemon? It automatically restarts your server when you make changes - huge time saver during development!
-
-
-
-
-npm install bcryptjs jsonwebtoken express-validator
-
-Install cookie parser: run in backend folder:
-npm i cookie-parser
-
-
-
-npm create vite@latest jeevansetu-frontend -- --template react
-
-cd jeevansetu-frontend
-
+# Backend
+cd jeevansetu-backend
 npm install
+cp .env.example .env   # or create .env using the template below
+npm run dev
 
-
-Old setup  of Tailwind CSS :- 
-
-Option B: Tailwind v3 (classic config)
-Only do this if you prefer the old setup.
-
-Install:
-npm i -D tailwindcss postcss autoprefixer
-npx tailwindcss init -p
-Add to tailwind.config.js:
-content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"]
-Replace @import "tailwindcss"; with:
-In 
-src/index.css
-:
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-Run: npm run dev
-
-
-
-New Setup of Tailwind CSS :- (Adopted here) :- 
-
-npm i -D tailwindcss@latest postcss@latest autoprefixer@latest
-npx tailwindcss@latest init -p
-
-Add to tailwind.config.js:
-content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"]
-
-or :- 
-
-just :- npm i -D tailwindcss @tailwindcss/vite
-
-Add to vite.config.js:
-import tailwindcss from "@tailwindcss/vite";
-export default {
-  plugins: [tailwindcss()],
-}
-
-Core libraries for React.js Frontend Setup (install now) :- 
-
-react-router-dom — routing
-axios — HTTP client (we’ll set withCredentials)
-react-hook-form — forms
-zod + @hookform/resolvers — schema validation
-react-hot-toast — lightweight toasts
-react-icons — icons
-
-npm i react-router-dom axios react-hook-form zod @hookform/resolvers react-hot-toast react-icons
-
-npm install react-slick slick-carousel --save
-
----
-
-# JeevanSetu – Project Overview and Roadmap
-
-## 1) What we are building
-JeevanSetu is a MERN-based, real-time Blood and Plasma donor application. Donors and recipients can register, manage their profiles, and connect quickly. This README documents the architecture, how to run locally, API surface, data models, and our feature roadmap (starting with the Dashboard).
-
-## 2) Tech Stack
-- Backend: Node.js (ESM), Express, MongoDB (Mongoose)
-- Auth: JWT (access token), HttpOnly cookie (refresh token)
-- Security/Middleware: helmet, cors, cookie-parser, morgan
-- Frontend: React + Vite, Tailwind theme (dark red/rose), react-hook-form, axios
-
-## 3) Monorepo layout
+# Frontend (new terminal)
+cd ../jeevansetu-frontend
+npm install
+npm run dev
 ```
+
+Open `http://localhost:5173` and make sure the backend (default `http://localhost:3000`) allows that origin via CORS.
+
+## Tech stack
+
+- **Frontend**: React + Vite, Tailwind CSS, react-hook-form, axios, react-icons, react-toastify, framer-motion
+- **Backend**: Node.js (ESM), Express, MongoDB (Mongoose)
+- **Auth**: JWT access tokens stored client-side + HttpOnly refresh tokens
+- **Security & tooling**: helmet, cors, cookie-parser, morgan, nodemon
+
+## Repository structure
+
+```text
 root/
 ├─ jeevansetu-backend/
-│  ├─ src/
-│  │  ├─ config/            # DB connection, env load
-│  │  ├─ controllers/       # Route controllers (authController.js, etc.)
-│  │  ├─ middleware/        # protect (JWT) middleware
-│  │  ├─ models/            # Mongoose models (User.js, Request.js, Donation.js)
-│  │  ├─ routes/            # Express routers (authRoutes.js, health.js)
-│  │  ├─ utils/             # generateTokens.js
-│  │  └─ server.js          # Express app bootstrap
-│  └─ package.json          # "type":"module"
+│  └─ src/
+│     ├─ config/        # DB connection & env loading
+│     ├─ controllers/   # authController, requestController, donationController
+│     ├─ middleware/    # JWT protect middleware
+│     ├─ models/        # User.js, Request.js, Donation.js
+│     ├─ routes/        # authRoutes.js, requestRoutes.js, donationRoutes.js, health.js
+│     └─ server.js      # Express app bootstrap
 └─ jeevansetu-frontend/
-   ├─ src/
-   │  ├─ components/        # Reusable UI and guards
-   │  ├─ hooks/             # useAuth, etc.
-   │  ├─ lib/               # api client, auth helpers
-   │  ├─ pages/             # Login, Register, Dashboard
-   │  └─ main.jsx/App.jsx   # App entry
-   └─ package.json
+   └─ src/
+      ├─ components/    # Dashboard widgets, layout pieces
+      ├─ hooks/         # useAuth, useRequests, useDonationHistory
+      ├─ lib/           # axios instance, toast wrapper
+      ├─ pages/         # Home, Login, Register, VerifyEmail, Forgot/Reset, Dashboard
+      └─ main.jsx       # SPA entry
 ```
 
-## 4) Environment setup
+## Configuration
+
 Create `jeevansetu-backend/.env`:
-```
+
+```env
 NODE_ENV=development
 PORT=3000
 MONGO_URI=mongodb://127.0.0.1:27017/jeevansetu
 JWT_SECRET=your_access_secret
 JWT_REFRESH_SECRET=your_refresh_secret
+EMAIL_USER=your_email@example.com        # optional: for OTP mailer
+EMAIL_PASS=your_email_password_or_app_key
+CLIENT_URL=http://localhost:5173
 ```
-Frontend dev server runs on port 5173 by default.
 
-## 5) Run locally
-- Backend
-  - cd jeevansetu-backend
-  - npm install
-  - npm run dev
-- Frontend
-  - cd jeevansetu-frontend
-  - npm install
-  - npm run dev
+Tailwind is preconfigured in the frontend via the Vite plugin.
 
-Ensure CORS allows http://localhost:5173 in `src/server.js`.
+## Running locally
 
-## 6) Data models (summary)
+- **Backend**
 
-### User (src/models/User.js)
-- Core: name, email (unique), password (hashed), role ('donor'|'recipient'), bloodGroup (enum), available (boolean)
-- Contact: country, state, city, phone, message
-- Profile: address (object) with `line1` (we map single "address" string into `address.line1`), optional `line2`, `postalCode`
-- Social: `social.instagram`, `social.x`, `social.facebook` (domain-validated URLs)
-- History: lastDonationAt (Date), donationHistory ([])
+  ```bash
+  cd jeevansetu-backend
+  npm install
+  npm run dev
+  ```
 
-### Request / Donation (placeholders)
-- Request.js and Donation.js exist for future flows (requests between recipients and donors, donation records). We will iterate here after Dashboard completion.
+- **Frontend**
 
-## 7) Auth flow
-1. Register: `POST /api/auth/register`
-   - Returns `data.user` and `accessToken`. Sets `refreshToken` in HttpOnly cookie.
-2. Login: `POST /api/auth/login`
-   - Returns `data.user` and `accessToken`. Sets `refreshToken` cookie.
-3. Authenticated calls:
-   - Frontend sends `Authorization: Bearer <accessToken>`.
-   - Middleware `protect` reads and verifies JWT (`JWT_SECRET`), attaches `req.userId`.
-4. Refresh token: `POST /api/auth/refresh-token`
-   - Reads refresh cookie, returns new `accessToken` and rotates cookie.
-5. Logout: `POST /api/auth/logout`
-   - Clears refresh cookie.
+  ```bash
+  cd jeevansetu-frontend
+  npm install
+  npm run dev
+  ```
 
-## 8) API surface (current)
+## Core features
 
-Base: `http://localhost:3000/api`
+1. Role-based onboarding for donors and recipients with detailed profiles, contact info, and social links.
+2. Secure authentication with JWT access tokens + HttpOnly refresh tokens.
+3. Recipient request management with statuses (`open`, `matched`, `fulfilled`, `cancelled`).
+4. Donor matching experience that surfaces compatible requests nearby.
+5. Auto-logged donation history when a matched request is fulfilled.
+6. Consistent, themed UI with animated toast notifications for every major action.
 
-### Health
-- `GET /health` – sanity probe
+## Functional flow
 
-### Auth
-- `POST /auth/register`
-- `POST /auth/login`
-- `GET /auth/profile` – protected; returns full user profile including `address` and `social`
-- `PUT /auth/profile` – protected; partial updates. Accepts any subset of:
-  - Personal: `name`, `phone`, `city`, `state`, `country`, `message`, `available`, `bloodGroup`
-  - Address: `address` (single string mapped to `address.line1`), and legacy fields `addressLine1`, `addressLine2`, `postalCode`
-  - Social: `instagram`, `x`, `facebook`
-- `POST /auth/refresh-token`
-- `POST /auth/logout`
+1. **Register & verify** – User chooses donor or recipient role, submits profile; backend stores the `User` and issues tokens.
+2. **Recipient workflow** – Create a blood/plasma `Request` (patient, hospital, blood group, urgency, location, contact). Requests start as `open`.
+3. **Donor workflow** – Donor dashboard lists compatible `open` requests. Accepting one marks it `matched` and saves `matchedDonor`.
+4. **Fulfillment** – Once the donation occurs, recipient marks the request `fulfilled`; backend creates a `Donation` record, updates donor `donationHistory` + `lastDonationAt`, and keeps the request history accurate.
+5. **History & insights** – Donors see chronological donations; recipients see request status groups and totals.
 
-Validation highlights
-- `bloodGroup` must be one of: A+, A-, B+, B-, AB+, AB-, O+, O-
-- `phone` must be 10 digits if provided
-- Social links must be full URLs to instagram.com, x.com, facebook.com
+## Sample test accounts (fresh DB reset)
 
-## 9) Frontend app
-- Login page (`src/pages/Login.jsx`): uses shared api client, stores access token, redirects to intended route or `/dashboard`.
-- Register page (`src/pages/Register.jsx`): single `address` field; sends only provided fields.
-- Dashboard (`src/pages/Dashboard.jsx`):
-  - Personal Information card complete.
-  - Social Links rendered and clickable.
-  - Address uses `profile.address.line1` (and shows `postalCode` if present).
-  - Status card next (see roadmap below).
+When you wipe the database, recreate these six accounts to cover all flows:
 
-## 10) Dashboard roadmap (incremental plan)
+| Email                         | Password            | Role                   | Notes                                          |
+| ----------------------------- | ------------------- | ---------------------- | ---------------------------------------------- |
+| `madhavp2023@gmail.com`       | `madhavptest1@2025` | Donor                  | Primary donor for request matching and history |
+| `madhavp014@gmail.com`        | `madhavptest2@2025` | Donor                  | Secondary donor for concurrent match tests     |
+| `madhavp2023@klebcahubli.com` | `madhavtest3@2025`  | Recipient              | Creates Request A (e.g., A+ blood, Hubballi)   |
+| `madhavjob2025@gmail.com`     | `madhavtest4@2025`  | Recipient              | Creates Request B (e.g., O- blood, Bengaluru)  |
+| `madhavjeevansetu@gmail.com`  | `madhavtest5@2025`  | Donor/Recipient (flex) | Spare account for OTP/forgot-password testing  |
+| `mjeevansetu@gmail.com`       | `madhavtest6@2025`  | Donor/Recipient (flex) | Spare account for additional scenarios         |
 
-Milestone M1 – Status Card (High priority)
-- Availability toggle with optimistic update (`PUT /auth/profile { available }`).
-- Last donation quick-set (date picker + save; `PUT /auth/profile { lastDonationAt }`).
-- Timestamps polish (updatedAt, relative time tooltip).
+> Tip: During registration, pass `?role=donor` or `?role=recipient` in the URL to preselect the form role.
 
-Milestone M2 – Quick Actions (High priority)
-- Edit Profile modal (name, phone, message, address, social); client validation; optimistic UI; success/error toasts.
-- Toggle Availability (duplicate control for convenience).
-- Copy Donor ID; Refresh; Logout.
+### Registration blueprint (copy/paste data)
 
-Milestone M3 – Donation History (Medium)
-- Empty state with CTA "Record donation".
-- Optional add entry (UI first, backend later if needed).
-- Relative time and better formatting.
+Use this table while re-entering data after a DB reset so every account is consistent:
 
-Milestone M4 – Polish (Medium)
-- Loading skeletons for Personal/Status cards.
-- Toasts (success/error) consistent with dark red/rose theme.
-- Accessibility pass (labels, aria-attrs).
+| Name            | Email                         | Role      | Blood Group | Location (Country / State / City) | Contact phone     | Availability                   | Social handles               |
+| --------------- | ----------------------------- | --------- | ----------- | --------------------------------- | ----------------- | ------------------------------ | ---------------------------- |
+| Arjun Donor     | `madhavp2023@gmail.com`       | Donor     | A+          | India / Karnataka / Hubballi      | `+91 90001 11111` | Available                      | instagram.com/arjun.donor    |
+| Meera Donor     | `madhavp014@gmail.com`        | Donor     | O-          | India / Karnataka / Bengaluru     | `+91 90002 22222` | Available                      | instagram.com/meera.donor    |
+| Priya Recipient | `madhavp2023@klebcahubli.com` | Recipient | A+          | India / Karnataka / Hubballi      | `+91 90003 33333` | n/a                            | x.com/priya.recipient        |
+| Ravi Recipient  | `madhavjob2025@gmail.com`     | Recipient | O-          | India / Karnataka / Bengaluru     | `+91 90004 44444` | n/a                            | instagram.com/ravi.recipient |
+| Spare Account 1 | `madhavjeevansetu@gmail.com`  | Donor     | B+          | India / Maharashtra / Pune        | `+91 90005 55555` | Unavailable (toggle for tests) | facebook.com/spare.one       |
+| Spare Account 2 | `mjeevansetu@gmail.com`       | Recipient | AB+         | India / Goa / Panaji              | `+91 90006 66666` | n/a                            | x.com/spare.two              |
 
-## 11) Coding standards and conventions
-- Backend uses ESM (`"type":"module"`). All exports are top-level (avoid nested `export`).
-- Controllers return consistent JSON: `{ success, data: { ... } }`.
-- Only send changed fields in update calls.
-- Keep imports at the top of files.
+Feel free to tweak names/phones, but keep blood groups diversified to test compatibility filters.
 
-## 12) Troubleshooting
-- `Unexpected token 'export'` in Node: ensure the previous function is closed with `};` before the next `export`.
-- 401 Unauthorized in Postman: ensure Authorization uses a defined variable (e.g., `{{accessToken}}`), token not expired, and route method matches (e.g., `PUT /auth/profile`).
+## End-to-end test playbook
 
----
+Follow this scripted flow after creating the accounts above:
 
-This README will evolve with each milestone. The near-term focus is completing the Dashboard per the roadmap above.
+1. **Login sanity**
+
+   - Sign in as each user to confirm credentials and that dashboards load without errors.
+
+2. **Recipient setup**
+
+   - `madhavp2023@klebcahubli.com`: create Request A (blood group A+, urgency High, Hubballi hospital). Ensure it appears under **Open**.
+   - `madhavjob2025@gmail.com`: create Request B (blood group O-, urgency Medium, Bengaluru). Verify toast + listing.
+
+3. **Donor matching**
+
+   - `madhavp2023@gmail.com`: from donor dashboard, filter to A+ and match Request A. Confirm toast success and request moves to **Matched** on recipient side.
+   - `madhavp014@gmail.com`: match Request B similarly.
+
+4. **Fulfillment and donation logging**
+
+   - Recipients mark their matched requests as **Fulfilled**.
+   - Backend auto-creates `Donation` entries; check each donor’s Donation History to confirm new rows with correct details (blood group, quantity, location, date).
+
+5. **Status regression**
+
+   - From recipient cards, toggle statuses back to **Open** and **Cancelled** to ensure transitions and toasts remain correct.
+
+6. **Availability & profile updates**
+
+   - Donors toggle availability on/off and update contact info/social links; ensure validations trigger for invalid inputs.
+
+7. **Auth edge cases**
+
+   - Use spare accounts for Forgot Password → OTP email → Reset Password; confirm login with the new password works.
+   - Test logout/login loops and refresh-token flow by letting the access token expire (or clearing local storage) and calling protected endpoints.
+
+8. **Final verification**
+   - Confirm recipients see accurate counts in quick stats, and donors’ donation histories stay in sync after refresh.
+
+### Detailed scenario walkthroughs
+
+#### Scenario A – Priya Recipient & Arjun Donor
+
+1. Register Priya (A+ recipient) and Arjun (A+ donor) using the blueprint above.
+2. Priya creates Request A with:
+   - Patient: "Riya Kulkarni" · Hospital: "KIMS Hubballi" · Quantity: 2 units · Needed By: +3 days · Urgency: High · Location: Hubballi.
+3. Arjun signs in, keeps availability toggled on, filters to blood group A+, matches Request A.
+4. Priya sees donor info populate; after coordinating offline, she marks the request **Fulfilled**.
+5. Verify Donation History entry for Arjun now shows Riya’s request with today’s date, location Hubballi, quantity 2 units.
+
+#### Scenario B – Ravi Recipient & Meera Donor
+
+1. Ravi (O- recipient) creates Request B with Patient "Ananya Rao" at "Fortis Bengaluru", quantity 3 units, urgency Medium.
+2. Meera (O- donor) matches the request, then Ravi marks it **Cancelled** to test status regression, reopens it, and finally marks **Fulfilled**.
+3. Confirm Donation History for Meera logs only the final fulfillment entry, and Ravi’s quick stats reflect total fulfilled/cancelled counts.
+
+#### Scenario C – OTP / Forgot Password
+
+1. On the Login page, click **Forgot Password**, submit `madhavjeevansetu@gmail.com`.
+2. Check mocked email/console log for OTP, go to Reset Password page, enter OTP + new password.
+3. Log in with the new password and ensure dashboard loads; attempt with old password to confirm it fails.
+
+#### Scenario D – Refresh token & timeout
+
+1. Log in as `mjeevansetu@gmail.com`, leave the dashboard idle until the access token expires (or manually clear local storage token).
+2. Trigger an API call (e.g., refresh personal info card) to confirm the app silently refreshes tokens via `/auth/refresh-token` and stays on the page.
+
+## Donor–recipient relationship
+
+- A **Recipient** can create multiple **Requests** (`requestedBy`).
+- A **Donor** can match multiple Requests (`matchedDonor`).
+- When a matched Request is fulfilled, a **Donation** links Donor ↔ Recipient ↔ Request.
+- Donor records maintain `donationHistory[]` of Donation IDs; recipients can trace every fulfilled request through its linked donation.
+
+This triad keeps data normalized while preserving end-to-end traceability.
+
+## API overview
+
+Base URL: `http://localhost:3000/api`
+
+- **Auth**: `POST /auth/register`, `POST /auth/login`, `GET /auth/profile`, `PUT /auth/profile`, `POST /auth/refresh-token`, `POST /auth/logout`
+- **Requests**: `POST /requests`, `GET /requests`, `POST /requests/:id/match`, `PATCH /requests/:id/status`
+- **Donations**: `POST /donations`, `GET /donations/me`
+- **Health**: `GET /health`
+
+Validation enforces legal blood groups (A+/–, B+/–, AB+/–, O+/–), 10-digit phone numbers, and proper Instagram/X/Facebook URLs.
+
+## Data models
+
+- **User** – `name`, `email`, `password`, `role`, `bloodGroup`, `available`, `country`, `state`, `city`, `phone`, `message`, `address`, `social`, `donationHistory[]`, `lastDonationAt`.
+- **Request** – `requestedBy`, `patientName`, `hospitalName`, `contactPhone`, `location`, `bloodGroup`, `urgencyLevel`, `quantity`, `neededBy`, `status`, `matchedDonor`.
+- **Donation** – `donor`, `recipient`, `request`, `bloodGroup`, `quantityDonated`, `dateOfDonation`, `location`, `status`, `notes`.
+
+## Frontend pages
+
+- **Home** – Marketing hero with role-based CTAs linking to `/register?role=donor|recipient`.
+- **Auth pages** – Login, Register, Verify Email, Forgot Password, Reset Password with unified blood/plasma theme and toast feedback.
+- **Dashboard**
+  - Donor: availability toggle, quick stats, compatible request feed, donation history.
+  - Recipient: create/manage requests, status-grouped lists, matched donor info, quick stats.
+
+## Testing checklist
+
+1. Register donor and recipient; verify email/OTP flow.
+2. Recipient creates a request → appears under `Open` and in donor feed.
+3. Donor matches the request → recipient view shows `Matched` with donor info.
+4. Recipient marks request `fulfilled` → donation history entry appears for donor.
+5. Exercise forgot/reset password flow (OTP email and reset confirmation).
+6. Toggle donor availability and update profile fields; confirm validations and toasts.
+
+## Troubleshooting
+
+- **JWT 401s** – Ensure `Authorization: Bearer <accessToken>` header is sent; call `/auth/refresh-token` if expired.
+- **CORS errors** – Align `CLIENT_URL` in backend `.env` with the frontend origin.
+- **Mongo connection issues** – Check `MONGO_URI` and that MongoDB service is running.
+- **Frontend build problems** – Clear `node_modules` and reinstall if Vite hot reload or Tailwind compilation fails.
+
+This README gives newcomers everything they need to clone, configure, run, and understand the donor–recipient flow end-to-end.
